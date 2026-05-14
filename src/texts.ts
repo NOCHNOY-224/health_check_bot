@@ -1,4 +1,4 @@
-import type { User, Interval } from './types.js';
+import type { User, Interval } from './types';
 
 export function escapeHtml(s: string): string {
   return s

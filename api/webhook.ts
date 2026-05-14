@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { buildBot } from '../src/bot.js';
+import { buildBot } from '../src/bot';
 
 const bot = buildBot();
 let initialized = false;

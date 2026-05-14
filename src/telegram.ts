@@ -1,7 +1,7 @@
 import { Bot, GrammyError, InlineKeyboard } from 'grammy';
-import { deleteUser } from './storage.js';
-import { T } from './texts.js';
-import type { User } from './types.js';
+import { deleteUser } from './storage';
+import { T } from './texts';
+import type { User } from './types';
 
 let _bot: Bot | null = null;
 

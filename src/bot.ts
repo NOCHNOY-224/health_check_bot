@@ -1,18 +1,18 @@
 import { Bot, InlineKeyboard, type Context } from 'grammy';
-import { getUser, saveUser } from './storage.js';
+import { getUser, saveUser } from './storage';
 import {
   T,
   formatTz,
   formatHour,
   formatLocalDateTime,
-} from './texts.js';
-import { INTERVALS, MIN_OFFSET, MAX_OFFSET, newUser, type Interval, type User } from './types.js';
-import { nextDueAt } from './scheduling.js';
+} from './texts';
+import { INTERVALS, MIN_OFFSET, MAX_OFFSET, newUser, type Interval, type User } from './types';
+import { nextDueAt } from './scheduling';
 import {
   bot as botSingleton,
   sendToGroup,
   editPromptAfterAlive,
-} from './telegram.js';
+} from './telegram';
 
 function timezoneKb(): InlineKeyboard {
   const kb = new InlineKeyboard();

@@ -1,12 +1,12 @@
-import { getUser, saveUser, listUserIds } from './storage.js';
-import { isInsideWindow, nextDueAt } from './scheduling.js';
-import { T } from './texts.js';
+import { getUser, saveUser, listUserIds } from './storage';
+import { isInsideWindow, nextDueAt } from './scheduling';
+import { T } from './texts';
 import {
   sendToGroup,
   sendCheckPrompt,
   getAdminUsername,
-} from './telegram.js';
-import type { User } from './types.js';
+} from './telegram';
+import type { User } from './types';
 
 const HOUR_MS = 3600 * 1000;
 

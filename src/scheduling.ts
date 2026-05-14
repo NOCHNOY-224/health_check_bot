@@ -1,4 +1,4 @@
-import type { User } from './types.js';
+import type { User } from './types';
 
 const HOUR_MS = 3600 * 1000;
 

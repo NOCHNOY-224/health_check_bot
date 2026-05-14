@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { BOT_COMMANDS } from '../src/bot.js';
-import { bot } from '../src/telegram.js';
+import { BOT_COMMANDS } from '../src/bot';
+import { bot } from '../src/telegram';
 
 export default async function (req: VercelRequest, res: VercelResponse) {
   const secret = process.env.CRON_SECRET;

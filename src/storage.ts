@@ -1,5 +1,5 @@
 import { Redis } from '@upstash/redis';
-import type { User } from './types.js';
+import type { User } from './types';
 
 let _redis: Redis | null = null;
 

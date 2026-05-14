@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { runChecks } from '../src/checker.js';
+import { runChecks } from '../src/checker';
 
 export default async function (req: VercelRequest, res: VercelResponse) {
   const secret = process.env.CRON_SECRET;
