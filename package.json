@@ -1,0 +1,21 @@
+{
+  "name": "health-check-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Telegram bot that pings users at intervals and reports check-ins to a group chat",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.34.3",
+    "grammy": "^1.30.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@vercel/node": "^3.2.0",
+    "typescript": "^5.5.3"
+  }
+}
