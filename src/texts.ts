@@ -88,14 +88,37 @@ export const T = {
     'Бот будет периодически писать «На связи?» — просто нажми «Да».',
 
   // Group messages
-  group_subscribed: (name: string, interval: Interval) =>
-    `🟢 <b>${escapeHtml(name)}</b> подключился к проверкам с интервалом ${interval} ч.`,
+  group_subscribed: (
+    name: string,
+    interval: Interval,
+    tz: number,
+    winStart: number,
+    winEnd: number,
+  ) =>
+    `🟢 <b>${escapeHtml(name)}</b> подключился к проверкам.\n` +
+    `Интервал: ${interval} ч · часовой пояс: ${formatTz(tz)} · окно: ${formatHour(winStart)}–${formatHour(winEnd)}`,
 
-  group_resumed: (name: string, interval: Interval) =>
-    `🟢 <b>${escapeHtml(name)}</b> возобновил проверки, интервал ${interval} ч.`,
+  group_resumed: (
+    name: string,
+    interval: Interval,
+    tz: number,
+    winStart: number,
+    winEnd: number,
+  ) =>
+    `🟢 <b>${escapeHtml(name)}</b> возобновил проверки.\n` +
+    `Интервал: ${interval} ч · часовой пояс: ${formatTz(tz)} · окно: ${formatHour(winStart)}–${formatHour(winEnd)}`,
 
   group_stopped: (name: string) =>
     `🔴 <b>${escapeHtml(name)}</b> остановил проверки.`,
+
+  group_interval_changed: (name: string, oldIv: Interval, newIv: Interval) =>
+    `🔧 <b>${escapeHtml(name)}</b> изменил интервал проверок: ${oldIv} ч → ${newIv} ч.`,
+
+  group_timezone_changed: (name: string, oldTz: number, newTz: number) =>
+    `🔧 <b>${escapeHtml(name)}</b> сменил часовой пояс: ${formatTz(oldTz)} → ${formatTz(newTz)}.`,
+
+  group_window_changed: (name: string, newStart: number, newEnd: number) =>
+    `🔧 <b>${escapeHtml(name)}</b> изменил окно активности: ${formatHour(newStart)}–${formatHour(newEnd)}.`,
 
   group_alive: (name: string, interval: Interval) =>
     `✅ Проверка ${interval} ч: <b>${escapeHtml(name)}</b> на связи!`,

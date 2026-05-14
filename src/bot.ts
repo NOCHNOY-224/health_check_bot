@@ -200,7 +200,15 @@ export function buildBot(): Bot {
     u.nextCheckDueAt = nextDueAt(Date.now(), u);
     await saveUser(u);
     await ctx.reply(T.resumed);
-    await sendToGroup(T.group_resumed(u.name, u.interval));
+    await sendToGroup(
+      T.group_resumed(
+        u.name,
+        u.interval,
+        u.utcOffsetHours,
+        u.windowStartHour,
+        u.windowEndHour,
+      ),
+    );
   });
 
   // Plain text — registration name step
@@ -238,6 +246,7 @@ export function buildBot(): Bot {
       return;
     }
     const u = await ensureUser(ctx.from.id);
+    const oldOffset = u.utcOffsetHours;
     u.utcOffsetHours = offset;
     if (u.regStep === 'awaiting_timezone') {
       u.regStep = 'awaiting_window_start';
@@ -258,6 +267,9 @@ export function buildBot(): Bot {
     await ctx.editMessageText(`Часовой пояс: <b>${formatTz(offset)}</b>`, {
       parse_mode: 'HTML',
     });
+    if (oldOffset != null && oldOffset !== offset && u.name) {
+      await sendToGroup(T.group_timezone_changed(u.name, oldOffset, offset));
+    }
   });
 
   // Window start hour
@@ -317,6 +329,9 @@ export function buildBot(): Bot {
     await ctx.editMessageText(`Конец окна: <b>${formatHour(h)}</b>`, {
       parse_mode: 'HTML',
     });
+    if (u.name && u.windowStartHour != null) {
+      await sendToGroup(T.group_window_changed(u.name, u.windowStartHour, h));
+    }
   });
 
   // Interval pick
@@ -330,6 +345,7 @@ export function buildBot(): Bot {
     const iv = ivNum as Interval;
     const u = await ensureUser(ctx.from.id);
     const wasFirstSubscription = !u.active || u.interval == null;
+    const oldInterval = u.interval;
     u.interval = iv;
     u.regStep = null;
 
@@ -351,9 +367,25 @@ export function buildBot(): Bot {
     await ctx.answerCallbackQuery({ text: `Интервал: ${iv} ч` });
     await ctx.editMessageText(`Интервал: <b>${iv} ч</b>`, { parse_mode: 'HTML' });
 
-    if (wasFirstSubscription && u.active) {
+    if (
+      wasFirstSubscription &&
+      u.active &&
+      u.utcOffsetHours != null &&
+      u.windowStartHour != null &&
+      u.windowEndHour != null
+    ) {
       await ctx.reply(T.reg_done(u.name, iv));
-      await sendToGroup(T.group_subscribed(u.name, iv));
+      await sendToGroup(
+        T.group_subscribed(
+          u.name,
+          iv,
+          u.utcOffsetHours,
+          u.windowStartHour,
+          u.windowEndHour,
+        ),
+      );
+    } else if (!wasFirstSubscription && oldInterval != null && oldInterval !== iv && u.name) {
+      await sendToGroup(T.group_interval_changed(u.name, oldInterval, iv));
     }
   });
 
