@@ -211,6 +211,73 @@ export function buildBot(): Bot {
     );
   });
 
+  // /list — group-only roster.
+  // Registered BEFORE bot.on('message:text') so the catch-all text handler
+  // below doesn't swallow the message. Uses `hears` with a regex so it matches
+  // both `/list` and `/list@<botname>` (Telegram auto-appends @botname in
+  // groups) regardless of whether bot.init() has populated botInfo.
+  bot.hears(/^\/list(?:@\w+)?(?:\s|$)/i, async (ctx) => {
+    const groupId = Number((process.env.GROUP_CHAT_ID ?? '').trim());
+    const chatId = ctx.chat?.id;
+    const chatType = ctx.chat?.type;
+
+    if (chatType === 'private') {
+      await ctx.reply(T.list_group_only);
+      return;
+    }
+
+    if (chatId !== groupId) {
+      // Group/supergroup but not the configured one. Show diagnostic so the
+      // admin can verify the ID and update GROUP_CHAT_ID in Vercel.
+      await ctx.reply(
+        '⚠️ Этот чат не настроен как группа проверок.\n' +
+          `ID этого чата: <code>${chatId}</code>\n` +
+          'Проверь переменную <code>GROUP_CHAT_ID</code> в Vercel.',
+        { parse_mode: 'HTML' },
+      );
+      return;
+    }
+
+    const ids = await listUserIds();
+    const users: User[] = [];
+    for (const id of ids) {
+      const u = await getUser(id);
+      if (u && u.name) users.push(u);
+    }
+    if (users.length === 0) {
+      await ctx.reply(T.list_empty, { parse_mode: 'HTML' });
+      return;
+    }
+    // Sort: active first, then by name (case-insensitive RU).
+    users.sort((a, b) => {
+      if (a.active !== b.active) return a.active ? -1 : 1;
+      return a.name.localeCompare(b.name, 'ru');
+    });
+    const lines: string[] = [T.list_header, ''];
+    for (const u of users) {
+      if (
+        u.active &&
+        u.interval != null &&
+        u.utcOffsetHours != null &&
+        u.windowStartHour != null &&
+        u.windowEndHour != null
+      ) {
+        lines.push(
+          T.list_entry_active(
+            u.name,
+            u.interval,
+            u.utcOffsetHours,
+            u.windowStartHour,
+            u.windowEndHour,
+          ),
+        );
+      } else {
+        lines.push(T.list_entry_paused(u.name));
+      }
+    }
+    await ctx.reply(lines.join('\n'), { parse_mode: 'HTML' });
+  });
+
   // Plain text — registration name step
   bot.on('message:text', async (ctx) => {
     if (!ctx.from) return;
@@ -387,60 +454,6 @@ export function buildBot(): Bot {
     } else if (!wasFirstSubscription && oldInterval != null && oldInterval !== iv && u.name) {
       await sendToGroup(T.group_interval_changed(u.name, oldInterval, iv));
     }
-  });
-
-  // /list — group-only roster.
-  // Using `hears` with a regex instead of `bot.command('list')` so the handler
-  // matches both `/list` and `/list@<botname>` (Telegram auto-appends the bot
-  // username in groups) without depending on bot.init() having populated
-  // botInfo.
-  bot.hears(/^\/list(?:@[\w_]+)?(?:\s|$)/i, async (ctx) => {
-    const groupId = Number((process.env.GROUP_CHAT_ID ?? '').trim());
-    const chatId = ctx.chat?.id;
-    if (chatId !== groupId) {
-      if (ctx.chat?.type === 'private') {
-        await ctx.reply(T.list_group_only);
-      }
-      return;
-    }
-    const ids = await listUserIds();
-    const users: User[] = [];
-    for (const id of ids) {
-      const u = await getUser(id);
-      if (u && u.name) users.push(u);
-    }
-    if (users.length === 0) {
-      await ctx.reply(T.list_empty, { parse_mode: 'HTML' });
-      return;
-    }
-    // Sort: active first, then by name (case-insensitive RU).
-    users.sort((a, b) => {
-      if (a.active !== b.active) return a.active ? -1 : 1;
-      return a.name.localeCompare(b.name, 'ru');
-    });
-    const lines: string[] = [T.list_header, ''];
-    for (const u of users) {
-      if (
-        u.active &&
-        u.interval != null &&
-        u.utcOffsetHours != null &&
-        u.windowStartHour != null &&
-        u.windowEndHour != null
-      ) {
-        lines.push(
-          T.list_entry_active(
-            u.name,
-            u.interval,
-            u.utcOffsetHours,
-            u.windowStartHour,
-            u.windowEndHour,
-          ),
-        );
-      } else {
-        lines.push(T.list_entry_paused(u.name));
-      }
-    }
-    await ctx.reply(lines.join('\n'), { parse_mode: 'HTML' });
   });
 
   // "Да" — alive confirmation
