@@ -1,5 +1,5 @@
 import { getUser, saveUser, listUserIds } from './storage';
-import { isInsideWindow, nextDueAt } from './scheduling';
+import { isInsideWindow } from './scheduling';
 import { T } from './texts';
 import {
   sendToGroup,
@@ -53,10 +53,12 @@ export async function runChecks(): Promise<{ processed: number; sent: number }> 
             await saveUser(u);
             sent++;
           } else {
-            // retryCount === 3: 4th window expired without answer → admin alert.
+            // retryCount === 3: 4th window expired without answer.
+            // Send admin alert AND stop checks for this user — they can /resume manually.
             await sendToGroup(T.group_admin_alert(getAdminUsername(), u.name));
             u.pending = null;
-            u.nextCheckDueAt = nextDueAt(now, u);
+            u.nextCheckDueAt = null;
+            u.active = false;
             await saveUser(u);
             sent++;
           }

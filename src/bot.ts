@@ -1,5 +1,5 @@
 import { Bot, InlineKeyboard, type Context } from 'grammy';
-import { getUser, saveUser } from './storage';
+import { getUser, saveUser, listUserIds } from './storage';
 import {
   T,
   formatTz,
@@ -389,6 +389,56 @@ export function buildBot(): Bot {
     }
   });
 
+  // /list — group-only roster
+  bot.command('list', async (ctx) => {
+    const groupId = Number(process.env.GROUP_CHAT_ID);
+    const chatId = ctx.chat?.id;
+    if (chatId !== groupId) {
+      if (ctx.chat?.type === 'private') {
+        await ctx.reply(T.list_group_only);
+      }
+      return;
+    }
+    const ids = await listUserIds();
+    const users: User[] = [];
+    for (const id of ids) {
+      const u = await getUser(id);
+      if (u && u.name) users.push(u);
+    }
+    if (users.length === 0) {
+      await ctx.reply(T.list_empty, { parse_mode: 'HTML' });
+      return;
+    }
+    // Sort: active first, then by name (case-insensitive RU).
+    users.sort((a, b) => {
+      if (a.active !== b.active) return a.active ? -1 : 1;
+      return a.name.localeCompare(b.name, 'ru');
+    });
+    const lines: string[] = [T.list_header, ''];
+    for (const u of users) {
+      if (
+        u.active &&
+        u.interval != null &&
+        u.utcOffsetHours != null &&
+        u.windowStartHour != null &&
+        u.windowEndHour != null
+      ) {
+        lines.push(
+          T.list_entry_active(
+            u.name,
+            u.interval,
+            u.utcOffsetHours,
+            u.windowStartHour,
+            u.windowEndHour,
+          ),
+        );
+      } else {
+        lines.push(T.list_entry_paused(u.name));
+      }
+    }
+    await ctx.reply(lines.join('\n'), { parse_mode: 'HTML' });
+  });
+
   // "Да" — alive confirmation
   bot.callbackQuery('alive', async (ctx) => {
     if (!ctx.from) return;
@@ -411,7 +461,7 @@ export function buildBot(): Bot {
   return bot;
 }
 
-export const BOT_COMMANDS = [
+export const PRIVATE_COMMANDS = [
   { command: 'start', description: 'Запустить или показать настройки' },
   { command: 'set_interval', description: 'Интервал проверок' },
   { command: 'set_timezone', description: 'Часовой пояс' },
@@ -420,4 +470,8 @@ export const BOT_COMMANDS = [
   { command: 'resume', description: 'Возобновить проверки' },
   { command: 'status', description: 'Текущие настройки' },
   { command: 'help', description: 'Список команд' },
+];
+
+export const GROUP_COMMANDS = [
+  { command: 'list', description: 'Список участников' },
 ];

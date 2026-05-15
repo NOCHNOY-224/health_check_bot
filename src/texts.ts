@@ -128,4 +128,23 @@ export const T = {
 
   group_admin_alert: (adminUsername: string, name: string) =>
     `@${adminUsername}\n<b>❌❌❌ ${escapeHtml(name)} не отвечает на проверки!</b>`,
+
+  list_header: '📋 <b>Участники проверок</b>',
+
+  list_entry_active: (
+    name: string,
+    interval: Interval,
+    tz: number,
+    winStart: number,
+    winEnd: number,
+  ) =>
+    `🟢 <b>${escapeHtml(name)}</b>\n` +
+    `    Интервал: ${interval} ч · ${formatTz(tz)} · окно: ${formatHour(winStart)}–${formatHour(winEnd)}`,
+
+  list_entry_paused: (name: string) =>
+    `⚪ <b>${escapeHtml(name)}</b> — проверки на паузе`,
+
+  list_empty: 'Пока нет зарегистрированных участников.',
+
+  list_group_only: 'Эта команда работает только в групповом чате проверок.',
 };

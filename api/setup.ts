@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { BOT_COMMANDS } from '../src/bot';
+import { PRIVATE_COMMANDS, GROUP_COMMANDS } from '../src/bot';
 import { bot } from '../src/telegram';
 
 export default async function (req: VercelRequest, res: VercelResponse) {
@@ -34,13 +34,19 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       drop_pending_updates: true,
       allowed_updates: ['message', 'callback_query'],
     });
-    await api.setMyCommands(BOT_COMMANDS);
+    await api.setMyCommands(PRIVATE_COMMANDS, {
+      scope: { type: 'all_private_chats' },
+    });
+    await api.setMyCommands(GROUP_COMMANDS, {
+      scope: { type: 'all_group_chats' },
+    });
     const info = await api.getWebhookInfo();
     return res.status(200).json({
       ok: true,
       webhook: webhookUrl,
       info,
-      commands: BOT_COMMANDS.length,
+      private_commands: PRIVATE_COMMANDS.length,
+      group_commands: GROUP_COMMANDS.length,
     });
   } catch (err) {
     console.error('setup failed', err);
