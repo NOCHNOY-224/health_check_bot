@@ -389,9 +389,13 @@ export function buildBot(): Bot {
     }
   });
 
-  // /list — group-only roster
-  bot.command('list', async (ctx) => {
-    const groupId = Number(process.env.GROUP_CHAT_ID);
+  // /list — group-only roster.
+  // Using `hears` with a regex instead of `bot.command('list')` so the handler
+  // matches both `/list` and `/list@<botname>` (Telegram auto-appends the bot
+  // username in groups) without depending on bot.init() having populated
+  // botInfo.
+  bot.hears(/^\/list(?:@[\w_]+)?(?:\s|$)/i, async (ctx) => {
+    const groupId = Number((process.env.GROUP_CHAT_ID ?? '').trim());
     const chatId = ctx.chat?.id;
     if (chatId !== groupId) {
       if (ctx.chat?.type === 'private') {
